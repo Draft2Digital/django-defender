@@ -42,6 +42,7 @@ def get_redis_connection():
             username=redis_config.get("USERNAME"),
             password=redis_config.get("PASSWORD"),
             ssl=redis_config.get("SSL"),
+            ssl_cert_reqs=config.DEFENDER_REDIS_SSL_CERT_REQS,
         )
 
 
