@@ -6,7 +6,7 @@ import sys
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.core.validators import validate_ipv46_address
+from django.core.validators import validate_ipv4_address, is_valid_ipv6_address, validate_ipv46_address
 from django.core.exceptions import ValidationError
 from django.utils.module_loading import import_string
 
@@ -70,6 +70,50 @@ def strip_port_number(ip_address_string):
         return ip_address
 
     return ip_address_string
+
+
+EXCLUDED_IPS = ['127.0.0.1']
+
+
+def is_valid_public_ipv4(_ip_address):
+    if _ip_address in EXCLUDED_IPS:
+        return False
+
+    is_private = _ip_address.startswith('10.')
+    if is_private:
+        return False
+
+    if is_valid_ipv6_address(_ip_address):
+        return False
+
+    try:
+        validate_ipv4_address(_ip_address)
+        return True
+    except ValidationError:
+        return False
+
+
+def get_ipv4(request):
+    """
+    Filters out IPV6, private, and local/dev IP addresses.
+    This will only return valid, public, IPV4 addresses.
+    If it fails to find one, or has an exception, will fall back to original get_ip function.
+    """
+    reverse_proxy_header_value = None
+    if config.BEHIND_REVERSE_PROXY:
+        try:
+            reverse_proxy_header_value = request.META.get(config.REVERSE_PROXY_HEADER, "")
+            for ip in reverse_proxy_header_value.split(",", 1):
+                ip = strip_port_number(ip.strip())
+                if is_valid_public_ipv4(ip):
+                    return ip
+            LOG.error((f'Failed to find valid public IPV4 from request. '
+                       f'reverse_proxy_header_value: "{reverse_proxy_header_value}"'))
+        except:
+            LOG.exception((f'Unexpected exception trying to find valid public IPV4 from request. '
+                           f'reverse_proxy_header_value: "{reverse_proxy_header_value}"'))
+
+    return get_ip(request)
 
 
 def get_ip(request):
