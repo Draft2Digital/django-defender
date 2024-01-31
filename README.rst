@@ -36,6 +36,22 @@ check the database on each login attempt. The first version will be based on
 Redis, but the goal is to make this configurable so that people can use whatever
 backend best fits their needs.
 
+How to Make New Release (D2D Edition)
+-------------------------------------
+
+Update version in `defender/__init__.py` by changing the last number to be one greater. Example, change
+
+```__version__ += "+d2d.001"```
+
+to
+
+```__version__ += "+d2d.002"```
+
+Commit and push changes, then go to https://github.com/Draft2Digital/django-defender/releases and click Draft a new release.
+
+Click Choose a tag and put in the same version as is the value in the `__version__` variable (e.g. `0.9.7+d2d.001`). Publish the release.
+
+In projects that use this, update the version pointed at to be the new version.
 
 Sites using django-defender
 ---------------------------
