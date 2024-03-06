@@ -73,14 +73,43 @@ def strip_port_number(ip_address_string):
 
 
 EXCLUDED_IPS = ['127.0.0.1']
+OTHER_RESERVED_OR_PRIVATE_IP_ADDRESS_BLOCKS = (
+    ('100.64.0.0', '100.127.255.255'),
+    ('192.0.0.0', '192.0.0.255'),
+    ('192.88.99.0', '192.88.99.255'),
+    ('224.0.0.0', '239.255.255.255'),
+    ('233.252.0.0', '233.252.0.255'),
+)
 
+def is_other_reserved_or_private_ip_address(_ip_address):
+    """
+    Some IP address blocks are not identified by ip_address(...).is_private or .is_reserved
+    This custom logic will identify IP address in the other private/reserved blocks.
+    https://en.wikipedia.org/wiki/Reserved_IP_addresses
+    """
+
+    def is_greater(ip1, ip2):
+        for ip1_part, ip2_part in zip(ip1.split('.'), ip2.split('.')):
+            if int(ip1_part) == int(ip2_part):
+                continue
+            return int(ip1_part) > int(ip2_part)
+
+    for lower_ip, upper_ip in OTHER_RESERVED_OR_PRIVATE_IP_ADDRESS_BLOCKS:
+        if _ip_address in (lower_ip, upper_ip):
+            return True
+        if is_greater(_ip_address, lower_ip) and is_greater(upper_ip, _ip_address):
+            return True
+    return False
 
 def is_valid_public_ipv4(_ip_address):
     if _ip_address in EXCLUDED_IPS:
         return False
 
-    is_private = _ip_address.startswith('10.')
-    if is_private:
+    ip_obj = ip_address(_ip_address)
+    if ip_obj.is_private or ip_obj.is_reserved:
+        return False
+
+    if is_other_reserved_or_private_ip_address(_ip_address):
         return False
 
     if is_valid_ipv6_address(_ip_address):
