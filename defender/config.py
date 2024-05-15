@@ -19,6 +19,8 @@ DEFENDER_REDIS_NAME = get_setting("DEFENDER_REDIS_NAME")
 
 MOCK_REDIS = get_setting("DEFENDER_MOCK_REDIS", False)
 
+DEFENDER_REDIS_SSL_CERT_REQS = get_setting("DEFENDER_REDIS_SSL_CERT_REQS", "required")
+
 # see if the user has overridden the failure limit
 FAILURE_LIMIT = get_setting("DEFENDER_LOGIN_FAILURE_LIMIT", 3)
 USERNAME_FAILURE_LIMIT = get_setting(
