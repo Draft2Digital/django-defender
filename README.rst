@@ -397,7 +397,7 @@ These should be defined in your ``settings.py`` file.
   (Example with password: ``redis://:mypassword@localhost:6379/0``\ )
 * ``DEFENDER_REDIS_PASSWORD_QUOTE``\ : Boolean: if special character in redis password (like '@'), we can quote password ``urllib.parse.quote("password!@#")``, and set to True.
   [Default: ``False``\ ]
-* ``DEFENDER_REDIS_NAME``\ : String: the name of your cache client on the CACHES django setting. If set, ``DEFENDER_REDIS_URL`` will be ignored.
+* ``DEFENDER_REDIS_NAME``\ : String: the name of the cache from ``CACHES`` in your Django settings (e.g. ``"default"``). If set, ``DEFENDER_REDIS_URL`` will be ignored.
   [Default: ``None``\ ]
 * ``DEFENDER_REDIS_SSL_CERT_REQS``\ : String: the value that gets passed to the redis connections ``ssl_cert_reqs`` parameter.
   [Default: ``required``\ ]

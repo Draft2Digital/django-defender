@@ -1,25 +1,13 @@
-{% extends "admin/index.html" %}
-{% load i18n %}
-
-{% if not is_popup %}
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-    &rsaquo;
-    {% for app in app_list %}
-    {{ app.name }}
-    {% endfor %}
-</div>
-{% endblock %}
-{% endif %}
-
-{% block sidebar %}{% endblock %}
+{% extends "admin/app_index.html" %}
 
 {% block content %}
 {{ block.super }}
+{% url 'defender_blocks_view' as blocks_url %}
+{% if blocks_url %}
 <div class="app-defender module">
     <table><tr scope='row'><td colspan='3'>
-    <h4><a href='{% url 'defender_blocks_view' %}'>Blocked Users</a></h4>
+    <h4><a href='{{ blocks_url }}'>Blocked Users</a></h4>
     </td></tr></table>
     </div>
+{% endif %}
 {% endblock content%}
