@@ -30,7 +30,7 @@ class Command(BaseCommand):
         attempts_to_clean.delete()
 
         print(
-            "Finished. Removed {0} AccessAttempt entries.".format(
+            "Finished. Removed {} AccessAttempt entries.".format(
                 attempts_to_clean_count
             )
         )

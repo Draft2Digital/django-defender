@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import AccessAttempt
 
 
+@admin.register(AccessAttempt)
 class AccessAttemptAdmin(admin.ModelAdmin):
     """ Access attempt admin config """
 
@@ -27,4 +28,3 @@ class AccessAttemptAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(AccessAttempt, AccessAttemptAdmin)

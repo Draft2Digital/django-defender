@@ -70,7 +70,7 @@ class AccessAttemptTest(DefenderTestCase):
         response = self.client.post(
             ADMIN_LOGIN_URL,
             {"username": username, "password": password, LOGIN_FORM_KEY: 1,},
-            HTTP_USER_AGENT=user_agent,
+            headers={"user-agent": user_agent}, 
             REMOTE_ADDR=remote_addr,
         )
 
@@ -161,7 +161,7 @@ class AccessAttemptTest(DefenderTestCase):
         one more time than failure limit
         """
         for i in range(0, config.FAILURE_LIMIT):
-            ip = "74.125.239.{0}.".format(i)
+            ip = f"74.125.239.{i}."
             response = self._login(username=VALID_USERNAME, remote_addr=ip)
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
@@ -181,7 +181,7 @@ class AccessAttemptTest(DefenderTestCase):
         respected when trying to login one more time than failure limit
         """
         for i in range(0, config.USERNAME_FAILURE_LIMIT):
-            ip = "74.125.239.{0}.".format(i)
+            ip = f"74.125.239.{i}."
             response = self._login(username=VALID_USERNAME, remote_addr=ip)
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
@@ -249,7 +249,7 @@ class AccessAttemptTest(DefenderTestCase):
         another ip
         """
         for i in range(0, config.FAILURE_LIMIT + 1):
-            ip = "74.125.239.{0}.".format(i)
+            ip = f"74.125.239.{i}."
             self._login(username=VALID_USERNAME, remote_addr=ip)
 
         # try to login with a different ip
@@ -262,7 +262,7 @@ class AccessAttemptTest(DefenderTestCase):
         within the cache.
         """
         for i in range(0, config.FAILURE_LIMIT + 2):
-            ip = "74.125.239.{0}.".format(i)
+            ip = f"74.125.239.{i}."
             self._login(username=UPPER_USERNAME, remote_addr=ip)
 
         self.assertNotIn(UPPER_USERNAME, utils.get_blocked_usernames())
@@ -274,7 +274,7 @@ class AccessAttemptTest(DefenderTestCase):
         """
         for username in ["", None]:
             for i in range(0, config.FAILURE_LIMIT + 2):
-                ip = "74.125.239.{0}.".format(i)
+                ip = f"74.125.239.{i}."
                 self._login(username=username, remote_addr=ip)
 
             self.assertNotIn(username, utils.get_blocked_usernames())
@@ -684,7 +684,7 @@ class AccessAttemptTest(DefenderTestCase):
         # same IP different, usernames
         ip = "74.125.239.60"
         for i in range(0, config.FAILURE_LIMIT + 10):
-            login_username = "{0}{1}".format(username, i)
+            login_username = f"{username}{i}"
             response = self._login(username=login_username, remote_addr=ip)
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
@@ -737,7 +737,7 @@ class AccessAttemptTest(DefenderTestCase):
         # try logging in with the same username, but different IPs.
         # we shouldn't be locked.
         for i in range(0, config.FAILURE_LIMIT + 10):
-            ip = "74.125.126.{0}".format(i)
+            ip = f"74.125.126.{i}"
             response = self._login(username=username, remote_addr=ip)
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)

@@ -2,31 +2,6 @@
 django-defender
 ===============
 
-.. image:: https://jazzband.co/static/img/badge.svg
-   :target: https://jazzband.co/
-   :alt: Jazzband
-
-.. image:: https://img.shields.io/pypi/pyversions/django-defender.svg
-    :alt: Supported Python versions
-    :target: https://pypi.org/project/django-defender/
-
-.. image:: https://img.shields.io/pypi/djversions/django-defender.svg
-   :target: https://pypi.org/project/django-defender/
-   :alt: Supported Django versions
-
-.. image:: https://github.com/jazzband/django-defender/workflows/Test/badge.svg
-   :target: https://github.com/jazzband/django-defender/actions
-   :alt: GitHub Actions
-
-.. image:: https://codecov.io/gh/jazzband/django-defender/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/jazzband/django-defender
-   :alt: Coverage
-
-.. image:: https://readthedocs.org/projects/django-defender/badge/?version=latest
-   :alt: Documentation Status
-   :target: https://django-defender.readthedocs.io/en/latest/?badge=latest
-
-
 A simple Django reusable app that blocks people from brute forcing login
 attempts. The goal is to make this as fast as possible, so that we do not
 slow down the login attempts.
@@ -52,15 +27,6 @@ Commit and push changes, then go to https://github.com/Draft2Digital/django-defe
 Click Choose a tag and put in the same version as is the value in the `__version__` variable (e.g. `0.9.7+d2d.001`). Publish the release.
 
 In projects that use this, update the version pointed at to be the new version.
-
-Sites using django-defender
----------------------------
-
-If you are using defender on your site, submit a PR to add to the list.
-
-* https://hub.docker.com
-* https://www.mycosbuilder.com
-
 
 Documentation
 -------------
