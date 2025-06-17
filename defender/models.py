@@ -17,6 +17,6 @@ class AccessAttempt(models.Model):
 
     def __str__(self):
         """ unicode value for this model """
-        return "{0} @ {1} | {2}".format(
+        return "{} @ {} | {}".format(
             self.username, self.attempt_time, self.login_valid
         )

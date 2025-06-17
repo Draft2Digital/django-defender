@@ -63,7 +63,7 @@ def strip_port_number(ip_address_string):
 
     """
     If it's not a valid IP address, we prefer to return
-    the string as-is instead of returning a potentially 
+    the string as-is instead of returning a potentially
     corrupted string:
     """
     if is_valid_ip(ip_address):
@@ -136,11 +136,11 @@ def get_ipv4(request):
                 ip = strip_port_number(ip.strip())
                 if is_valid_public_ipv4(ip):
                     return ip
-            LOG.error((f'Failed to find valid public IPV4 from request. '
-                       f'reverse_proxy_header_value: "{reverse_proxy_header_value}"'))
+            LOG.error(f'Failed to find valid public IPV4 from request. '
+                       f'reverse_proxy_header_value: "{reverse_proxy_header_value}"')
         except:
-            LOG.exception((f'Unexpected exception trying to find valid public IPV4 from request. '
-                           f'reverse_proxy_header_value: "{reverse_proxy_header_value}"'))
+            LOG.exception(f'Unexpected exception trying to find valid public IPV4 from request. '
+                           f'reverse_proxy_header_value: "{reverse_proxy_header_value}"')
 
     return get_ip(request)
 
@@ -179,24 +179,24 @@ def lower_username(username):
 
 def get_ip_attempt_cache_key(ip_address):
     """ get the cache key by ip """
-    return "{0}:failed:ip:{1}".format(config.CACHE_PREFIX, ip_address)
+    return f"{config.CACHE_PREFIX}:failed:ip:{ip_address}"
 
 
 def get_username_attempt_cache_key(username):
     """ get the cache key by username """
-    return "{0}:failed:username:{1}".format(
+    return "{}:failed:username:{}".format(
         config.CACHE_PREFIX, lower_username(username)
     )
 
 
 def get_ip_blocked_cache_key(ip_address):
     """ get the cache key by ip """
-    return "{0}:blocked:ip:{1}".format(config.CACHE_PREFIX, ip_address)
+    return f"{config.CACHE_PREFIX}:blocked:ip:{ip_address}"
 
 
 def get_username_blocked_cache_key(username):
     """ get the cache key by username """
-    return "{0}:blocked:username:{1}".format(
+    return "{}:blocked:username:{}".format(
         config.CACHE_PREFIX, lower_username(username)
     )
 
@@ -433,10 +433,9 @@ def reset_failed_attempts(ip_address=None, username=None):
     pipe.execute()
 
 
-def lockout_response(request):
+def lockout_response(request, username):
     """ if we are locked out, here is the response """
     ip_address = get_ip(request)
-    username = get_username_from_request(request)
     if config.LOCKOUT_TEMPLATE:
         cooloff_time = get_lockout_cooloff_time(ip_address=ip_address, username=username)
         context = {
@@ -519,9 +518,9 @@ def add_login_attempt_to_db(
 
     username = username or get_username(request)
 
-    user_agent = request.META.get("HTTP_USER_AGENT", "<unknown>")[:255]
+    user_agent = request.headers.get("user-agent", "<unknown>")[:255]
     ip_address = get_ip(request)
-    http_accept = request.META.get("HTTP_ACCEPT", "<unknown>")
+    http_accept = request.headers.get("accept", "<unknown>")
     path_info = request.META.get("PATH_INFO", "<unknown>")
 
     if config.USE_CELERY:

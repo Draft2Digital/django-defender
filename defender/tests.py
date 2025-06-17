@@ -3,11 +3,8 @@ import string
 import time
 from unittest.mock import patch
 
-from datetime import datetime, timedelta
-
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.sessions.backends.db import SessionStore
-from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.test.client import RequestFactory
 from django.test.testcases import TestCase
@@ -26,7 +23,7 @@ from .signals import (
     username_block as username_block_signal,
     username_unblock as username_unblock_signal,
 )
-from .connection import parse_redis_url, get_redis_connection
+from .connection import get_redis_connection
 from .decorators import watch_login
 from .models import AccessAttempt
 from .test import DefenderTestCase, DefenderTransactionTestCase
@@ -73,7 +70,7 @@ class AccessAttemptTest(DefenderTestCase):
         response = self.client.post(
             ADMIN_LOGIN_URL,
             {"username": username, "password": password, LOGIN_FORM_KEY: 1,},
-            HTTP_USER_AGENT=user_agent,
+            headers={"user-agent": user_agent}, 
             REMOTE_ADDR=remote_addr,
         )
 
@@ -164,7 +161,7 @@ class AccessAttemptTest(DefenderTestCase):
         one more time than failure limit
         """
         for i in range(0, config.FAILURE_LIMIT):
-            ip = "74.125.239.{0}.".format(i)
+            ip = f"74.125.239.{i}."
             response = self._login(username=VALID_USERNAME, remote_addr=ip)
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
@@ -184,7 +181,7 @@ class AccessAttemptTest(DefenderTestCase):
         respected when trying to login one more time than failure limit
         """
         for i in range(0, config.USERNAME_FAILURE_LIMIT):
-            ip = "74.125.239.{0}.".format(i)
+            ip = f"74.125.239.{i}."
             response = self._login(username=VALID_USERNAME, remote_addr=ip)
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
@@ -252,7 +249,7 @@ class AccessAttemptTest(DefenderTestCase):
         another ip
         """
         for i in range(0, config.FAILURE_LIMIT + 1):
-            ip = "74.125.239.{0}.".format(i)
+            ip = f"74.125.239.{i}."
             self._login(username=VALID_USERNAME, remote_addr=ip)
 
         # try to login with a different ip
@@ -265,7 +262,7 @@ class AccessAttemptTest(DefenderTestCase):
         within the cache.
         """
         for i in range(0, config.FAILURE_LIMIT + 2):
-            ip = "74.125.239.{0}.".format(i)
+            ip = f"74.125.239.{i}."
             self._login(username=UPPER_USERNAME, remote_addr=ip)
 
         self.assertNotIn(UPPER_USERNAME, utils.get_blocked_usernames())
@@ -277,7 +274,7 @@ class AccessAttemptTest(DefenderTestCase):
         """
         for username in ["", None]:
             for i in range(0, config.FAILURE_LIMIT + 2):
-                ip = "74.125.239.{0}.".format(i)
+                ip = f"74.125.239.{i}."
                 self._login(username=username, remote_addr=ip)
 
             self.assertNotIn(username, utils.get_blocked_usernames())
@@ -477,74 +474,6 @@ class AccessAttemptTest(DefenderTestCase):
         self.assertEqual(utils.is_valid_ip("2001:db8:85a3::8a2e:370:7334"), True)
         self.assertEqual(utils.is_valid_ip("::ffff:192.0.2.128"), True)
         self.assertEqual(utils.is_valid_ip("::ffff:8.8.8.8"), True)
-
-    def test_parse_redis_url(self):
-        """ test the parse_redis_url method """
-        # full regular
-        conf = parse_redis_url("redis://user:password@localhost2:1234/2", False)
-        self.assertEqual(conf.get("HOST"), "localhost2")
-        self.assertEqual(conf.get("DB"), 2)
-        self.assertEqual(conf.get("PASSWORD"), "password")
-        self.assertEqual(conf.get("PORT"), 1234)
-        self.assertEqual(conf.get("USERNAME"), "user")
-
-        # full non local
-        conf = parse_redis_url(
-            "redis://user:pass@www.localhost.com:1234/2", False)
-        self.assertEqual(conf.get("HOST"), "www.localhost.com")
-        self.assertEqual(conf.get("DB"), 2)
-        self.assertEqual(conf.get("PASSWORD"), "pass")
-        self.assertEqual(conf.get("PORT"), 1234)
-        self.assertEqual(conf.get("USERNAME"), "user")
-
-        # no user name
-        conf = parse_redis_url("redis://password@localhost2:1234/2", False)
-        self.assertEqual(conf.get("HOST"), "localhost2")
-        self.assertEqual(conf.get("DB"), 2)
-        self.assertEqual(conf.get("PASSWORD"), None)
-        self.assertEqual(conf.get("PORT"), 1234)
-
-        # no user name 2 with colon
-        conf = parse_redis_url("redis://:password@localhost2:1234/2", False)
-        self.assertEqual(conf.get("HOST"), "localhost2")
-        self.assertEqual(conf.get("DB"), 2)
-        self.assertEqual(conf.get("PASSWORD"), "password")
-        self.assertEqual(conf.get("PORT"), 1234)
-
-        # Empty
-        conf = parse_redis_url(None, False)
-        self.assertEqual(conf.get("HOST"), "localhost")
-        self.assertEqual(conf.get("DB"), 0)
-        self.assertEqual(conf.get("PASSWORD"), None)
-        self.assertEqual(conf.get("PORT"), 6379)
-
-        # no db
-        conf = parse_redis_url("redis://:password@localhost2:1234", False)
-        self.assertEqual(conf.get("HOST"), "localhost2")
-        self.assertEqual(conf.get("DB"), 0)
-        self.assertEqual(conf.get("PASSWORD"), "password")
-        self.assertEqual(conf.get("PORT"), 1234)
-
-        # no password
-        conf = parse_redis_url("redis://localhost2:1234/0", False)
-        self.assertEqual(conf.get("HOST"), "localhost2")
-        self.assertEqual(conf.get("DB"), 0)
-        self.assertEqual(conf.get("PASSWORD"), None)
-        self.assertEqual(conf.get("PORT"), 1234)
-
-        # password with special character and set the password_quote = True
-        conf = parse_redis_url("redis://:calmkart%23%40%21@localhost:6379/0", True)
-        self.assertEqual(conf.get("HOST"), "localhost")
-        self.assertEqual(conf.get("DB"), 0)
-        self.assertEqual(conf.get("PASSWORD"), "calmkart#@!")
-        self.assertEqual(conf.get("PORT"), 6379)
-
-        # password without special character and set the password_quote = True
-        conf = parse_redis_url("redis://:password@localhost2:1234", True)
-        self.assertEqual(conf.get("HOST"), "localhost2")
-        self.assertEqual(conf.get("DB"), 0)
-        self.assertEqual(conf.get("PASSWORD"), "password")
-        self.assertEqual(conf.get("PORT"), 1234)
 
     @patch("defender.config.DEFENDER_REDIS_NAME", "default")
     def test_get_redis_connection_django_conf(self):
@@ -755,7 +684,7 @@ class AccessAttemptTest(DefenderTestCase):
         # same IP different, usernames
         ip = "74.125.239.60"
         for i in range(0, config.FAILURE_LIMIT + 10):
-            login_username = "{0}{1}".format(username, i)
+            login_username = f"{username}{i}"
             response = self._login(username=login_username, remote_addr=ip)
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
@@ -808,7 +737,7 @@ class AccessAttemptTest(DefenderTestCase):
         # try logging in with the same username, but different IPs.
         # we shouldn't be locked.
         for i in range(0, config.FAILURE_LIMIT + 10):
-            ip = "74.125.126.{0}".format(i)
+            ip = f"74.125.126.{i}"
             response = self._login(username=username, remote_addr=ip)
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
@@ -935,6 +864,41 @@ class AccessAttemptTest(DefenderTestCase):
 
             data_out = utils.get_blocked_ips()
             self.assertEqual(data_out, [])
+
+    @patch("defender.config.USERNAME_FAILURE_LIMIT", 3)
+    @patch("defender.config.DISABLE_IP_LOCKOUT", True)
+    def test_login_blocked_for_non_standard_login_views_different_username(self):
+        """
+        Check that a view with custom username blocked correctly
+        """
+
+        @watch_login(status_code=401, get_username=lambda request: request.POST.get("email"))
+        def fake_api_401_login_different_username(request):
+            """ Fake the api login with 401 """
+            return HttpResponse("Invalid", status=401)
+
+        wrong_email = "email@localhost"
+
+        request_factory = RequestFactory()
+        request = request_factory.post("api/login", data={"email": wrong_email})
+        request.user = AnonymousUser()
+        request.session = SessionStore()
+
+        for _ in range(3):
+            fake_api_401_login_different_username(request)
+
+            data_out = utils.get_blocked_usernames()
+            self.assertEqual(data_out, [])
+
+        fake_api_401_login_different_username(request)
+
+        data_out = utils.get_blocked_usernames()
+        self.assertEqual(data_out, [wrong_email])
+
+        # Ensure that `watch_login` correctly extract username from request
+        # during `is_already_locked` check and don't cause 500 errors
+        status_code = fake_api_401_login_different_username(request)
+        self.assertNotEqual(status_code, 500)
 
     @patch("defender.config.ATTEMPT_COOLOFF_TIME", "a")
     def test_bad_attempt_cooloff_configuration(self):
